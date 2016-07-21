@@ -158,11 +158,11 @@ def main():
     location = config.location
     if config.test:
         return
-    #get_location(config.username, config.password, location)
+    #get_location(config.username, config.password, location, False)
 
 
 
-def get_location(user, psswd, location):
+def get_location(user, psswd, location,pokeOnly):
     splitloc = location.split(",")
     position = (float(splitloc[0]), float(splitloc[1]), 0)
     # instantiate pgoapi 
@@ -208,16 +208,16 @@ def get_location(user, psswd, location):
     
     # execute the RPC call
     response_dict = api.call()
-    handleMapResp(response_dict["responses"]["GET_MAP_OBJECTS"])
-    #api.get_map_objects(latitude = util.f2i(position[0]), longitude = util.f2i(position[1]), since_timestamp_ms = timestamps, cell_id = cell_ids)
-    #response_dict = api.call()
-    #handleMapResp(response_dict["responses"]["GET_MAP_OBJECTS"])
+    handleMapResp(response_dict["responses"]["GET_MAP_OBJECTS"],pokeOnly)
+    api.get_map_objects(latitude = util.f2i(position[0]), longitude = util.f2i(position[1]), since_timestamp_ms = timestamps, cell_id = cell_ids)
+    response_dict = api.call()
+    handleMapResp(response_dict["responses"]["GET_MAP_OBJECTS"],pokeOnly)
 
     
     # alternative:
     # api.get_player().get_inventory().get_map_objects().download_settings(hash="05daf51635c82611d1aac95c0b051d3ec088a930").call()
 
-def handleMapResp(respdict):
+def handleMapResp(respdict,pokeOnly):
     pokemonsJSON = json.load(
         open("pokenames.json"))
     bulk = []
@@ -259,8 +259,8 @@ def handleMapResp(respdict):
                         t = createItem(props["type"], fort["id"], p, props)
                         print(t)
                     props["marker-color"] = "808080"
-
-                bulk.append(createItem(props["type"], fort["id"], p, props))
+                if not pokeOnly:
+                    bulk.append(createItem(props["type"], fort["id"], p, props))
             
         if "wild_pokemons" in cell:
             for pokemon in cell["wild_pokemons"]:
@@ -309,16 +309,16 @@ def updateQueueFile():
         skipQueue = True
 def working():
     while True:
-        item = q.get()
+        item,pokeOnly = q.get()
         print("Getting location for %s" % item)
-        get_location(username,password,item)
+        get_location(username,password,item, pokeOnly)
         updateQueueFile()
 
 def working_acct(user):
     while True:
-        item = q.get()
+        item,pokeOnly = q.get()
         print("Getting location for %s" % item)
-        get_location(user,password,item)
+        get_location(user,password,item,pokeOnly)
         updateQueueFile()
 
 @app.route("/")
@@ -326,6 +326,21 @@ def retQueue():
   size = q.qsize()
   return "%s" % size
 prevreq = []
+@app.route('/addPokemon/<lat>/<lon>')
+def addPokemon(lat,lon):
+    global prevreq
+    if (lat,lon) in prevreq:
+        print("They suck")
+        return "You suck"
+    if abs(float(lon)) > 180:
+        return "Too big!"
+    if len(prevreq) >=20:
+        prevreq.pop()
+    prevreq.append((lat,lon))
+    q.put(("%s,%s"%(float(lat),float(lon)), True))
+    updateQueueFile()
+    return "Queue is %s"% q.qsize()
+
 @app.route('/addToQueue/<lat>/<lon>')
 def addToQueue(lat,lon):
     global prevreq
@@ -337,7 +352,7 @@ def addToQueue(lat,lon):
     if len(prevreq) >=20:
         prevreq.pop()
     prevreq.append((lat,lon))
-    q.put("%s,%s"%(float(lat),float(lon)))
+    q.put(("%s,%s"%(float(lat),float(lon)), False))
     updateQueueFile()
     return "Queue is %s"% q.qsize()
 
