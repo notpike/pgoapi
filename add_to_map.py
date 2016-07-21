@@ -27,6 +27,7 @@ Author: tjado <https://github.com/tejado>
 import os
 import re
 import sys
+import math
 import json
 import time
 import struct
@@ -321,11 +322,28 @@ def working_acct(user):
         get_location(user,password,item,pokeOnly)
         updateQueueFile()
 
+def get_four(lat,lon):
+    #conversions
+    #1 deg lat 110.574 km
+    #1 degree lon = 111.320*cos(latitude) km
+    #0.8 km = .00723497386
+    #0.8km = 0.00718648939 * cos(lat)
+    movement_lon = math.cos(math.radians(lat)) * 0.00179662234
+    plus_lat = (lat+0.00180874346, lon)
+    minus_lat = (lat-0.00180874346, lon)
+    plus_lon = (lat,lon+movement_lon)
+    minus_lon = (lat,lon-movement_lon)
+    print ([plus_lat,minus_lat,plus_lon,minus_lon])
+    return [plus_lat,minus_lat,plus_lon,minus_lon]
+
+
+
 @app.route("/")
 def retQueue():
   size = q.qsize()
   return "%s" % size
 prevreq = []
+
 @app.route('/addPokemon/<lat>/<lon>')
 def addPokemon(lat,lon):
     global prevreq
@@ -337,7 +355,8 @@ def addPokemon(lat,lon):
     if len(prevreq) >=20:
         prevreq.pop()
     prevreq.append((lat,lon))
-    q.put(("%s,%s"%(float(lat),float(lon)), True))
+    for nlat, nlon in get_four(float(lat),float(lon)):
+        q.put(("%s,%s"%(float(nlat),float(nlon)), True))
     updateQueueFile()
     return "Queue is %s"% q.qsize()
 
