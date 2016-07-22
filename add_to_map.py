@@ -38,7 +38,7 @@ import argparse
 import getpass
 import threading
 from Queue import Queue
-from secrets import bearer, endpoint, qfile, username, password, useraccs
+from secrets import bearer, endpoint, qfile, username, password, useraccs, do_lots
 from flask import Flask
 app = Flask(__name__)
 
@@ -210,9 +210,9 @@ def get_location(user, psswd, location,pokeOnly):
     # execute the RPC call
     response_dict = api.call()
     handleMapResp(response_dict["responses"]["GET_MAP_OBJECTS"],pokeOnly)
-    api.get_map_objects(latitude = util.f2i(position[0]), longitude = util.f2i(position[1]), since_timestamp_ms = timestamps, cell_id = cell_ids)
-    response_dict = api.call()
-    handleMapResp(response_dict["responses"]["GET_MAP_OBJECTS"],pokeOnly)
+    #api.get_map_objects(latitude = util.f2i(position[0]), longitude = util.f2i(position[1]), since_timestamp_ms = timestamps, cell_id = cell_ids)
+    #response_dict = api.call()
+    #handleMapResp(response_dict["responses"]["GET_MAP_OBJECTS"],pokeOnly)
 
     
     # alternative:
@@ -322,7 +322,7 @@ def working_acct(user):
         get_location(user,password,item,pokeOnly)
         updateQueueFile()
 
-def get_four(lat,lon):
+def get_surrounding(lat,lon):
     #conversions
     #1 deg lat 110.574 km
     #1 degree lon = 111.320*cos(latitude) km
@@ -333,7 +333,12 @@ def get_four(lat,lon):
     minus_lat = (lat-0.00180874346, lon)
     plus_lon = (lat,lon+movement_lon)
     minus_lon = (lat,lon-movement_lon)
-    print ([plus_lat,minus_lat,plus_lon,minus_lon])
+    if do_lots:
+        plus_both = (lat+0.00180874346, lon+movement_lon)
+        pm_both = (lat+0.00180874346, lon-movement_lon)
+        mp_both = (lat-0.00180874346, lon+movement_lon)
+        minus_both = (lat-0.00180874346, lon-movement_lon)
+        return [plus_lat,minus_lat,plus_lon,minus_lon,plus_both,pm_both,mp_both,minus_both,(lat,lon)]
     return [plus_lat,minus_lat,plus_lon,minus_lon]
 
 
@@ -355,7 +360,7 @@ def addPokemon(lat,lon):
     if len(prevreq) >=20:
         prevreq.pop()
     prevreq.append((lat,lon))
-    for nlat, nlon in get_four(float(lat),float(lon)):
+    for nlat, nlon in get_surrounding(float(lat),float(lon)):
         q.put(("%s,%s"%(float(nlat),float(nlon)), True))
     updateQueueFile()
     return "Queue is %s"% q.qsize()
