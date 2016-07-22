@@ -191,7 +191,7 @@ def find_poi(api, lat, lng, pokeOnly):
         response_dict = api.call()
         if response_dict['responses']['GET_MAP_OBJECTS']['status'] == 1:
             for map_cell in response_dict['responses']['GET_MAP_OBJECTS']['map_cells']:
-                if 'forts' in map_cell and not pokeOnly:
+                if 'forts' in map_cell:
                     for fort in map_cell['forts']:
                         poi["forts"][fort["id"]] = fort
                 if 'wild_pokemons' in map_cell:
@@ -237,7 +237,8 @@ def find_poi(api, lat, lng, pokeOnly):
                 t = createItem(props["type"], fort["id"], p, props)
                 print(t)
             props["marker-color"] = "808080"
-        bulk.append(createItem(props["type"], fort["id"], p, props))
+        if not pokeOnly:
+            bulk.append(createItem(props["type"], fort["id"], p, props))
     
     pokemonsJSON = json.load(
         open("pokenames.json"))
