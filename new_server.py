@@ -252,7 +252,7 @@ def find_poi(api, lat, lng, pokeOnly):
           "type": "wild",
           "pokemonNumber": pokeid,
           "TimeTillHiddenMs": pokemon["time_till_hidden_ms"],
-          "WillDisappear": pokemon["time_till_hidden_ms"] + time.time(),
+          "WillDisappear": pokemon["time_till_hidden_ms"] + int(time.time()*1000),
           "title": "Wild %s" %pokename,
           "marker-color": "FF0000"
           }
@@ -357,7 +357,8 @@ def worker(user, passwd):
             print(e)
             api = make_api(user, passwd)
 if __name__ == '__main__':
-    t = threading.Thread(target=worker, args=(username,password))
-    t.daemon = True
-    t.start()
+    for acct in useraccs:
+        t = threading.Thread(target=worker, args=(acct,password))
+        t.daemon = True
+        t.start()
     app.run(host="0.0.0.0", port=5000)
