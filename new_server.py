@@ -344,14 +344,13 @@ def addToQueue(lat,lon):
     if len(prevreq) >=20:
         prevreq.pop()
     prevreq.append((lat,lon))
-    q.put((float(lat),float(lon)), False)
+    q.put(((float(lat),float(lon)), False))
     return "Queue is %s"% q.qsize()
 
 def worker(user, passwd):
     api = make_api(user, passwd)
     while True:
         position, pokeOnly = q.get()
-        print(position)
         try:
             find_poi(api, position[0], position[1], pokeOnly)
         except Exception as e:
