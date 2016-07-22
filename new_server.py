@@ -237,7 +237,7 @@ def find_poi(api, lat, lng, pokeOnly):
                 t = createItem(props["type"], fort["id"], p, props)
                 print(t)
             props["marker-color"] = "808080"
-        if not pokeOnly:
+        if pokeOnly == False:
             bulk.append(createItem(props["type"], fort["id"], p, props))
     
     pokemonsJSON = json.load(
@@ -258,7 +258,8 @@ def find_poi(api, lat, lng, pokeOnly):
           }
         p = {"type": "Point", "coordinates": [pokemon["longitude"], pokemon["latitude"]]}
 
-        bulk.append(createItem("pokemon", pokemon["encounter_id"], p, f))
+        if pokeOnly:
+            bulk.append(createItem("pokemon", pokemon["encounter_id"], p, f))
     print('POI dictionary: \n\r{}'.format(json.dumps(bulk, indent=2)))
     print(time.time())
     dumpToMap(bulk)
@@ -349,6 +350,7 @@ def addToQueue(lat,lon):
 
 def worker(user, passwd):
     api = make_api(user, passwd)
+    print("%s logged in" % user)
     while True:
         position, pokeOnly = q.get()
         try:
