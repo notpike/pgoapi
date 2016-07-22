@@ -309,6 +309,7 @@ def dumpToMap(data):
         return
     headers = {"Authorization" : "Bearer %s" % bearer}
     r = requests.post("%s/api/push/mapobject/bulk" % endpoint, json = data, headers = headers)
+    print("Successfully sent!")
 
 @app.route("/")
 def retQueue():
@@ -342,7 +343,7 @@ def addToQueue(lat,lon):
     if len(prevreq) >=20:
         prevreq.pop()
     prevreq.append((lat,lon))
-    q.put(("%s,%s"%(float(lat),float(lon)), False))
+    q.put((float(lat),float(lon)), False)
     return "Queue is %s"% q.qsize()
 
 def worker(user, passwd):
