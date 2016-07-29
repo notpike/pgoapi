@@ -178,6 +178,7 @@ def find_poi(api, lat, lng, pokeOnly):
         step_limit = 49
     coords = generate_spiral(lat, lng, step_size, step_limit)
     for coord in coords:
+        time.sleep(0.3)
         lat = coord['lat']
         lng = coord['lng']
         api.set_position(lat, lng, 0)
@@ -239,6 +240,7 @@ def find_poi(api, lat, lng, pokeOnly):
             props["marker-color"] = "808080"
         if pokeOnly == False:
             bulk.append(createItem(props["type"], fort["id"], p, props))
+            print("adding pokestop")
     
     pokemonsJSON = json.load(
         open("pokenames.json"))
