@@ -172,7 +172,7 @@ def make_api(user, passwd):
 
 def find_poi(api, lat, lng, pokeOnly):
     poi = {'pokemons': {}, 'forts': {}}
-    step_size = 0.0015
+    step_size = 0.0010
     step_limit = 1
     if pokeOnly:
         step_limit = 49
@@ -291,11 +291,15 @@ def generate_spiral(starting_lat, starting_lng, step_size, step_limit):
             lat = x * step_size + starting_lat + random.uniform(rlow, rhigh)
             lng = y * step_size + starting_lng + random.uniform(rlow, rhigh)
             coords.append({'lat': lat, 'lng': lng})
+#DOUBLE IT UP
+            coords.append({'lat': lat, 'lng': lng})
         while 2 * y * d < m and steps < step_limit:
             y = y + d
             steps += 1
             lat = x * step_size + starting_lat + random.uniform(rlow, rhigh)
             lng = y * step_size + starting_lng + random.uniform(rlow, rhigh)
+            coords.append({'lat': lat, 'lng': lng})
+#DOUBLE IT UP
             coords.append({'lat': lat, 'lng': lng})
 
         d = -1 * d
@@ -360,6 +364,7 @@ def worker(user, passwd):
         except Exception as e:
             print(e)
             api = make_api(user, passwd)
+            q.put((position, pokeOnly))
 if __name__ == '__main__':
     for acct in useraccs:
         t = threading.Thread(target=worker, args=(acct,password))
